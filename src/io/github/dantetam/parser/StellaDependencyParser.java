@@ -54,6 +54,7 @@ public class StellaDependencyParser {
 			//log.info(gs);
 			results.add(new ParseGrammarResult(tagged, gs));
 		}
+		return results;
 	}
 	
 	public static void main(String[] args) {

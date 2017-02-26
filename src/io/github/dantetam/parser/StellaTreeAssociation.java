@@ -1,5 +1,8 @@
 package io.github.dantetam.parser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /*
  * Experimental class to find associations between words in a grammar structure
  * The base model being an unknown set of weights for certain dependencies (0.8 for nmod, 0.6 for amod, etc.),
@@ -8,4 +11,17 @@ package io.github.dantetam.parser;
  */
 public class StellaTreeAssociation {
 	
+	public static Association processText() {
+		
+	}
+	
 }
+
+
+
+
+
+
+
+
+
