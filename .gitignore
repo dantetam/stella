@@ -1,0 +1,7 @@
+/bin/
+/.idea/
+*.classpath
+/build/
+*.properties
+*.OBJ
+*.alloc

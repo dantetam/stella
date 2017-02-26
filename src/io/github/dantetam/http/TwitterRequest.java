@@ -24,28 +24,30 @@ public class TwitterRequest {
 		accessToken = HttpRequest.twitterRequestBearerToken().replace("\"", "");
 	}
 	
-	public String twitterGlobalTrending() {
+	/*
+	 * Get an array of the currently leading topics on Twitter through the GET trends/place endpoint.
+	 */
+	public String[] twitterGlobalTrending() {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://api.twitter.com/1.1/trends/place.json?id=1");
         	HttpGet httpGet = new HttpGet(url);
         	httpGet.setHeader("Authorization", "Bearer " + accessToken);
-        	
-        	System.out.println("Bearer " + accessToken);
-        	
+                	
             ResponseHandler<String> responseHandler = new HttpResponseHandler();
             String responseBody = httpclient.execute(httpGet, responseHandler);
 
             JsonElement element = JsonProcessor.parseStringToObject(responseBody);            
             JsonArray trends = element.getAsJsonArray().get(0).getAsJsonObject().get("trends").getAsJsonArray();
            
+            String[] results = new String[trends.size()];
             for (int i = 0; i < trends.size(); i++) {
             	JsonElement trend = trends.get(i);
-            	System.out.println(trend);
+            	//System.out.println(trend);
+            	results[i] = trend.getAsJsonObject().get("name").toString();
             }
             
             //System.out.println(trends);
-            
             
         } catch (Exception e) {
         	e.printStackTrace();
@@ -60,9 +62,54 @@ public class TwitterRequest {
         return null;
 	}
 	
+	/*
+	 * Get tweets from Twitter for a certain topic through the Twitter API GET search/tweets endpoint.
+	 */
+	public void twitterSearchTopic(String topic) {
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	String url = new String("https://api.twitter.com/1.1/search/tweets.json?");
+        	url += "q=" + topic;
+        	url += "&lang=en";
+        	url += "&count=100";
+        	System.out.println(url);
+        	HttpGet httpGet = new HttpGet(url);
+        	httpGet.setHeader("Authorization", "Bearer " + accessToken);
+        	
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            String responseBody = httpclient.execute(httpGet, responseHandler);
+
+            JsonArray tweets = JsonProcessor.parseStringToObject(responseBody).getAsJsonObject().get("statuses").getAsJsonArray();   
+            String[] results = new String[tweets.size()];
+            for (int i = 0; i < tweets.size(); i++) {
+            	JsonElement tweet = tweets.get(i);
+            	System.out.println("-------");
+            	System.out.println(tweet);
+            	System.out.println(tweet.getAsJsonObject().get("created_at").toString());
+            	System.out.println(tweet.getAsJsonObject().get("id").toString());
+            	System.out.println(tweet.getAsJsonObject().get("text").toString());
+            	System.out.println(tweet.getAsJsonObject().get("user").toString());
+            	//results[i] = trend.getAsJsonObject().get("name").toString();
+            }
+            
+            //System.out.println(trends);
+            
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+            try {
+				httpclient.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+	}
+	
 	public static void main(String[] args) {
 		TwitterRequest twitterRequest = new TwitterRequest();
-		String topics = twitterRequest.twitterGlobalTrending();
+		String[] topics = twitterRequest.twitterGlobalTrending();
+		twitterRequest.twitterSearchTopic("DNCChair");
 	}
 	
 }
