@@ -35,6 +35,10 @@ public class StellaDependencyParser {
 		parser = DependencyParser.loadFromModelFile(modelPath);
 	}
 	
+	/*
+	 * Collate the parsed data of some text, which includes a list of words and 
+	 * the grammatical structure containing those words.
+	 */
 	public static List<ParseGrammarResult> parseGrammarStructure(String text) {
 		if (!trained) {
 			train();

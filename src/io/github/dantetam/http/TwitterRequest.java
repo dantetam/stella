@@ -2,6 +2,9 @@ package io.github.dantetam.http;
 
 import java.io.IOException;
 import java.sql.Time;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -14,7 +17,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.sun.jna.platform.win32.OaIdl.VARDESC;
 
+import edu.stanford.nlp.util.StringParsingTask;
 import io.github.dantetam.data.JsonProcessor;
+import io.github.dantetam.parser.ParseGrammarResult;
+import io.github.dantetam.parser.StellaDependencyParser;
+import io.github.dantetam.parser.StellaTreeAssociation;
+import io.github.dantetam.parser.StellaWordAssociationGraph;
 
 public class TwitterRequest {
 
@@ -65,7 +73,7 @@ public class TwitterRequest {
 	/*
 	 * Get tweets from Twitter for a certain topic through the Twitter API GET search/tweets endpoint.
 	 */
-	public void twitterSearchTopic(String topic) {
+	public String[] twitterSearchTopic(String topic) {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://api.twitter.com/1.1/search/tweets.json?");
@@ -89,9 +97,10 @@ public class TwitterRequest {
             	System.out.println(tweet.getAsJsonObject().get("id").toString());
             	System.out.println(tweet.getAsJsonObject().get("text").toString());
             	System.out.println(tweet.getAsJsonObject().get("user").toString());
-            	//results[i] = trend.getAsJsonObject().get("name").toString();
+            	results[i] = tweet.getAsJsonObject().get("text").toString();
             }
             
+            return results;
             //System.out.println(trends);
             
         } catch (Exception e) {
@@ -104,12 +113,27 @@ public class TwitterRequest {
 				e.printStackTrace();
 			}
         }
+        return null;
 	}
 	
 	public static void main(String[] args) {
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
-		twitterRequest.twitterSearchTopic("DNCChair");
+		String[] tweets = twitterRequest.twitterSearchTopic("DNCChair");
+		
+		StellaTreeAssociation stellaTreeAssociation = new StellaTreeAssociation();
+		
+		for (String tweet: tweets) {
+			List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
+			for (ParseGrammarResult psg: parseGrammarResults) {
+				StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);
+				double[][] matrix = StellaWordAssociationGraph.getFullAssociationMatrix(psg.taggedWords, graph);
+				Map<String[], Double> sortedCorr = StellaWordAssociationGraph.matrixFindBestCorrelation(psg.taggedWords, matrix);
+				for (Map.Entry<String[], Double> entry : sortedCorr.entrySet()) {
+					System.out.println(entry.getKey()[0] + ", " + entry.getKey()[1] + ": " + entry.getValue());
+				}
+			}
+		}
 	}
 	
 }
