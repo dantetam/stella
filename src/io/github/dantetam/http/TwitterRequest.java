@@ -116,7 +116,25 @@ public class TwitterRequest {
         return null;
 	}
 	
+	private static String sanitizeTweet(String text) {
+		text = text.replaceAll("\n", "").replaceAll("\r", "").replaceAll("\"", "");
+		//text = text.replaceAll("\\p{P}", "");
+		String[] tokens = text.split(" ");
+		String result = "";
+		for (int i = 0; i < tokens.length - 1; i++) { //Remove last token which is often truncated
+			String token = tokens[i];
+			if (token.contains("#")) {
+				token = token.substring(1);
+			}
+			if (!token.equals("RT") && !token.contains("@") && !token.contains("&") && !token.contains("...") && token.trim().length() > 0) {
+				result += token.replaceAll("[^A-Za-z0-9 ]", "") + " ";
+			}
+		}
+		return result;
+	}
+	
 	public static void main(String[] args) {
+		
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
 		String[] tweets = twitterRequest.twitterSearchTopic("DNCChair");
@@ -126,6 +144,9 @@ public class TwitterRequest {
 		//String tweet = tweets[0];
 		//String tweet = "I can always tell when movies use fake dinosaurs";
 		for (String tweet: tweets) {
+			System.out.println(tweet);
+			tweet = sanitizeTweet(tweet);
+			System.out.println(tweet);
 			List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
 			for (ParseGrammarResult psg: parseGrammarResults) {
 				StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);
@@ -135,9 +156,10 @@ public class TwitterRequest {
 				for (Map.Entry<String[], Double> entry : sortedCorr.entrySet()) {
 					String word1 = entry.getKey()[0], word2 = entry.getKey()[1];
 					//if ()
+					if (word1 == "``" || word2 == "``") continue;
 					System.out.println(word1 + ", " + word2 + ": " + entry.getValue());
 					i++;
-					if (i == 10) break;
+					if (i == 30) break;
 				}
 			}
 		}
