@@ -21,9 +21,13 @@ import edu.stanford.nlp.trees.TypedDependency;
 public class StellaTreeAssociation {
 	
 	private Map<String, Double> grammarRelationScores;
+	private final static double DEFAULT_RELATION_SCORE = 0.2d;
 	
 	public StellaTreeAssociation() {
 		grammarRelationScores = new HashMap<>();
+		grammarRelationScores.put("nsubj", 0.8d);
+		grammarRelationScores.put("compound", 1.0d);
+		grammarRelationScores.put("amod", 0.4d);
 	}
 	
 	/*
@@ -38,7 +42,7 @@ public class StellaTreeAssociation {
 		GrammaticalStructure gs = parseGrammarResult.grammarStructure;
 		
 		for (TaggedWord word: words) {
-			resultGraph.addVertex(word);
+			resultGraph.addVertex(word.word());
 		}
 		
  		/*for (int i = 0; i < words.size(); i++) {
@@ -72,13 +76,15 @@ public class StellaTreeAssociation {
 		Collection<TypedDependency> deps = gs.allTypedDependencies();
 		for (TypedDependency dep: deps) {
 			GrammaticalRelation reln = dep.reln();
+			//System.out.println(reln);
+			//System.out.println(dep.gov().tag() + " " + dep.dep().tag());
 			String depAbbr = reln.toString();
 			if (!grammarRelationScores.containsKey(depAbbr)) {
-				grammarRelationScores.put(depAbbr, 1.0d);
+				grammarRelationScores.put(depAbbr, DEFAULT_RELATION_SCORE);
 			}
 			double score = grammarRelationScores.get(depAbbr);
 			
-			resultGraph.add(dep.gov(), dep.dep(), new RelationAndScore(reln, score));
+			resultGraph.add(dep.gov().word(), dep.dep().word(), new RelationAndScore(reln, score));
 		}
 		
  		return resultGraph;

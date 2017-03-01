@@ -123,14 +123,21 @@ public class TwitterRequest {
 		
 		StellaTreeAssociation stellaTreeAssociation = new StellaTreeAssociation();
 		
+		//String tweet = tweets[0];
+		//String tweet = "I can always tell when movies use fake dinosaurs";
 		for (String tweet: tweets) {
 			List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
 			for (ParseGrammarResult psg: parseGrammarResults) {
 				StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);
 				double[][] matrix = StellaWordAssociationGraph.getFullAssociationMatrix(psg.taggedWords, graph);
 				Map<String[], Double> sortedCorr = StellaWordAssociationGraph.matrixFindBestCorrelation(psg.taggedWords, matrix);
+				int i = 0;
 				for (Map.Entry<String[], Double> entry : sortedCorr.entrySet()) {
-					System.out.println(entry.getKey()[0] + ", " + entry.getKey()[1] + ": " + entry.getValue());
+					String word1 = entry.getKey()[0], word2 = entry.getKey()[1];
+					//if ()
+					System.out.println(word1 + ", " + word2 + ": " + entry.getValue());
+					i++;
+					if (i == 10) break;
 				}
 			}
 		}

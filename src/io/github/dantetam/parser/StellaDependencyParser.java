@@ -41,6 +41,7 @@ public class StellaDependencyParser {
 	 */
 	public static List<ParseGrammarResult> parseGrammarStructure(String text) {
 		if (!trained) {
+			trained = true;
 			train();
 		}
 		List<ParseGrammarResult> results = new ArrayList<>();
@@ -62,7 +63,7 @@ public class StellaDependencyParser {
 	}
 	
 	public static void main(String[] args) {
-		parseGrammarStructure("I can always tell when they use fake dinosaurs in movies.");
+		parseGrammarStructure("I can always tell when they use fake dinosaurs in movies");
 	}
 
 }

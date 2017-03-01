@@ -11,7 +11,7 @@ import io.github.dantetam.util.MapUtil;
 
 //public class StellaWordAssociationMap extends HashMap<String, Map<String, Double>> {
 	
-public class StellaWordAssociationGraph extends DirectedMultiGraph<TaggedWord, RelationAndScore> {
+public class StellaWordAssociationGraph extends DirectedMultiGraph<String, RelationAndScore> {
 
 	public StellaWordAssociationGraph() {
 		super();
@@ -25,19 +25,31 @@ public class StellaWordAssociationGraph extends DirectedMultiGraph<TaggedWord, R
 		double[][] result = new double[taggedWords.size()][taggedWords.size()];
 		for (int i = 0; i < taggedWords.size(); i++) {
 			for (int j = 0; j < taggedWords.size(); j++) {
-				if (i == j) continue;
-				TaggedWord vertexU = taggedWords.get(i), vertexV = taggedWords.get(j);
+				if (i <= j) continue;
+				String vertexU = taggedWords.get(i).word(), vertexV = taggedWords.get(j).word();
+				if (vertexU.equals(vertexV)) continue;
 				//List<TaggedWord> shortestPathVertices = graph.getShortestPath(vertexU, vertexV);
-				List<RelationAndScore> shortestPathEdges = graph.getShortestPathEdges(vertexU, vertexV, true);
+				List<RelationAndScore> shortestPathEdges;
+				try {
+					shortestPathEdges = graph.getShortestPathEdges(vertexU, vertexV, false);
+				} catch (NullPointerException e) {
+					shortestPathEdges = null;
+				}
 				double finalScore = 1;
-				if (shortestPathEdges == null) {
+				//System.out.println(vertexU + " " + vertexV);
+				/*if (shortestPathEdges == null) {
 					shortestPathEdges = graph.getShortestPathEdges(vertexU, vertexV, false);
 					finalScore *= 0.5d;
+				}*/
+				if (shortestPathEdges == null) {
+					finalScore *= 0;
 				}
-				for (RelationAndScore relationAndScore: shortestPathEdges) {
-					finalScore *= relationAndScore.score;
+				else {
+					for (RelationAndScore relationAndScore: shortestPathEdges) {
+						finalScore *= relationAndScore.score;
+					}
+					finalScore *= Math.pow(0.8d, shortestPathEdges.size());
 				}
-				finalScore *= Math.pow(0.8d, shortestPathEdges.size());
 				result[i][j] = finalScore;
 			}
 		}
@@ -48,15 +60,15 @@ public class StellaWordAssociationGraph extends DirectedMultiGraph<TaggedWord, R
 	 * Get a correlation matrix and list of words,
 	 * and return a sorted map of high ranking correlated word pairs.
 	 */
-	public static Map<String[], Double> matrixFindBestCorrelation(List<TaggedWord> taggedWords, double[][] matrix) {
+	public static LinkedHashMap<String[], Double> matrixFindBestCorrelation(List<TaggedWord> taggedWords, double[][] matrix) {
 		Map<Integer, Double> total = new HashMap<>();
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
 				total.put(i*matrix.length + j, matrix[i][j]);
 			}
 		}
-		LinkedHashMap<Integer, Double> sorted = MapUtil.sortByValue(total);
-		Map<String[], Double> finalResult = new HashMap<>();
+		LinkedHashMap<Integer, Double> sorted = MapUtil.sortByValueDescending(total);
+		LinkedHashMap<String[], Double> finalResult = new LinkedHashMap<>();
 		for (Map.Entry<Integer, Double> entry : sorted.entrySet()) {
 			int index = entry.getKey();
 			int r = index / matrix.length, c = index % matrix.length;

@@ -9,20 +9,40 @@ import java.util.Map;
 
 public class MapUtil
 {
+	
     public static <K, V extends Comparable<? super V>> LinkedHashMap<K, V> 
-        sortByValue( Map<K, V> map ) 
+        sortByValueAscending(Map<K, V> map) 
     {
-        List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(map.entrySet());
-        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+        Comparator comparator = new Comparator<Map.Entry<K, V>>() {
             public int compare( Map.Entry<K, V> o1, Map.Entry<K, V> o2 ) {
-                return (o1.getValue()).compareTo( o2.getValue() );
+                return (o1.getValue()).compareTo(o2.getValue());
             }
-        });
-
-        LinkedHashMap<K, V> result = new LinkedHashMap<K, V>();
-        for (Map.Entry<K, V> entry : list) {
-            result.put(entry.getKey(), entry.getValue() );
-        }
-        return result;
+        };
+        return sortByValueCustomComparator(map, comparator);
     }
+    
+    public static <K, V extends Comparable<? super V>> LinkedHashMap<K, V> 
+	    sortByValueDescending(Map<K, V> map) 
+	{
+	    Comparator comparator = new Comparator<Map.Entry<K, V>>() {
+	        public int compare( Map.Entry<K, V> o1, Map.Entry<K, V> o2 ) {
+	            return (o2.getValue()).compareTo(o1.getValue());
+	        }
+	    };
+	    return sortByValueCustomComparator(map, comparator);
+	}
+    
+    private static <K, V extends Comparable<? super V>> LinkedHashMap<K, V> 
+    	sortByValueCustomComparator(Map<K, V> map, Comparator<Map.Entry<K, V>> comparator) 
+	{
+	    List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(map.entrySet());
+	    Collections.sort(list, comparator);
+	
+	    LinkedHashMap<K, V> result = new LinkedHashMap<K, V>();
+	    for (Map.Entry<K, V> entry : list) {
+	        result.put(entry.getKey(), entry.getValue() );
+	    }
+	    return result;
+	}
+    
 }
