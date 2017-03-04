@@ -1,5 +1,6 @@
 package io.github.dantetam.analysis;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ public class SubjectiveAnalysis {
 				0.3, 0.3, 0.3, 0.3, 0.3, 0.5, 0.6, 0.6, 0.6, 0.8,
 				0.8, 0.9
 		};
+		phraseBiasMap = new HashMap<>();
 		for (int i = 0; i < phrases.length; i++) {
 			phraseBiasMap.put(phrases[i], weights[i]);
 		}
@@ -53,6 +55,9 @@ public class SubjectiveAnalysis {
 		}
 		double score = 0;
 		for (TaggedWord taggedWord: taggedWords) {
+			if (!phraseBiasMap.containsKey(taggedWord.tag())) {
+				System.out.println("Could not find tag: " + taggedWord.tag());
+			}
 			score += phraseBiasMap.get(taggedWord.tag());
 		}
 		return score / taggedWords.size();
@@ -69,6 +74,12 @@ public class SubjectiveAnalysis {
 		for (Tree tree: binaryTrees) {
 			
 		}
+		return score;
+	}
+	
+	public static void main(String[] args) {
+		SubjectiveAnalysis sAnalysis = new SubjectiveAnalysis();
+		System.out.println(sAnalysis.subjectivityScore("ISIS is the absolute worst terrorist group."));
 	}
 
 }
