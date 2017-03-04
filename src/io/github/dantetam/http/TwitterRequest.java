@@ -134,7 +134,6 @@ public class TwitterRequest {
 	}
 	
 	public static void main(String[] args) {
-		
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
 		String[] tweets = twitterRequest.twitterSearchTopic("DNCChair");
@@ -144,9 +143,9 @@ public class TwitterRequest {
 		//String tweet = tweets[0];
 		//String tweet = "I can always tell when movies use fake dinosaurs";
 		for (String tweet: tweets) {
-			System.out.println(tweet);
+			//System.out.println(tweet);
 			tweet = sanitizeTweet(tweet);
-			System.out.println(tweet);
+			//System.out.println(tweet);
 			List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
 			for (ParseGrammarResult psg: parseGrammarResults) {
 				StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);

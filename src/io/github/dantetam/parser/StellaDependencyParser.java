@@ -62,6 +62,19 @@ public class StellaDependencyParser {
 		return results;
 	}
 	
+	public static List<TaggedWord> tagSentence(String text) {
+		if (!trained) {
+			trained = true;
+			train();
+		}
+		DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(text));
+		for (List<HasWord> sentence : tokenizer) {
+			List<TaggedWord> tagged = tagger.tagSentence(sentence);
+			return tagged;
+		}
+		return null;
+	}
+	
 	public static void main(String[] args) {
 		parseGrammarStructure("I can always tell when they use fake dinosaurs in movies");
 	}
