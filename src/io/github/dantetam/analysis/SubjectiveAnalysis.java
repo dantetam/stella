@@ -5,6 +5,7 @@ import java.util.Map;
 
 import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.Tree;
 import io.github.dantetam.parser.ParseGrammarResult;
 import io.github.dantetam.parser.StellaDependencyParser;
 
@@ -55,6 +56,19 @@ public class SubjectiveAnalysis {
 			score += phraseBiasMap.get(taggedWord.tag());
 		}
 		return score / taggedWords.size();
+	}
+	
+	/*
+	 * A different method of analyzing subjectivity,
+	 * using the parsed grammatical structure of the text,
+	 * combined with weights for certain grammatical modifiers and depth levels.
+	 */
+	public double treeSubjectivityScore(String text) {
+		List<Tree> binaryTrees = SentimentAnalysis.getBinaryGrammarTree(text);
+		double score = 0;
+		for (Tree tree: binaryTrees) {
+			
+		}
 	}
 
 }
