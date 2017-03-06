@@ -1,94 +1,51 @@
-/*package io.github.dantetam.analysis; 
+package io.github.dantetam.analysis;
 
-import java.util.*; 
+import com.sun.jna.platform.FileUtils;
 
-import java.io.IOException; 
+import io.github.dantetam.data.CsvAssociation;
+import io.github.dantetam.data.CsvAssociationParser;
+import io.github.dantetam.data.CsvProcessor;
 
-import org.apache.hadoop.fs.Path; 
-import org.apache.hadoop.conf.*; 
-import org.apache.hadoop.io.*; 
-import org.apache.hadoop.mapred.*; 
-import org.apache.hadoop.util.*; 
+public class ACSDataAnalysis {
+	
+	public static class CountCsvQueryResponse extends CsvQueryResponse<String[], Integer> {
 
-public class ACSDataAnalysis 
-{ 
-	//Mapper class 
-	public static class E_EMapper extends MapReduceBase implements 
-	Mapper<LongWritable, Input key Type  
-	Text,                Input value Type 
-	Text,                Output key Type 
-	IntWritable>         Output value Type 
-	{ 
-
-		//Map function 
-		public void map(LongWritable key, Text value, 
-				OutputCollector<Text, IntWritable> output,   
-				Reporter reporter) throws IOException 
-		{ 
-			String line = value.toString(); 
-			String lasttoken = null; 
-			StringTokenizer s = new StringTokenizer(line, ","); 
-			String year = s.nextToken(); 
-
-			while (s.hasMoreTokens())
-			{
-				lasttoken = s.nextToken();
-			} 
-
-			int avgprice = Integer.parseInt(lasttoken); 
-			output.collect(new Text(year), new IntWritable(avgprice)); 
-			System.out.println(year + " " + avgprice);
-		} 
-	} 
-
-
-	//Reducer class 
-	public static class E_EReduce extends MapReduceBase implements 
-	Reducer< Text, IntWritable, Text, IntWritable > 
-	{  
-
-		//Reduce function 
-		public void reduce( Text key, Iterator <IntWritable> values, 
-				OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException 
-		{ 
-			int maxavg=30; 
-			int val=Integer.MIN_VALUE; 
-
-			while (values.hasNext()) 
-			{ 
-				if((val=values.next().get())>maxavg) 
-				{ 
-					output.collect(key, new IntWritable(val)); 
-				} 
-			} 
-
-		} 
-	}  
-
-
-	//Main function 
-	public static void main(String args[]) throws Exception 
-	{ 
-		if (args.length < 2) {
-			args = new String[]{
-					"/data/acs-sample-test.csv",
-					"/bin/acs-sample-output.csv"
-			};
+		private StringQuery stringQuery;
+		protected int count;
+		
+		public CountCsvQueryResponse(StringQuery query) {
+			super();
+			stringQuery = query;
+			count = 0;
 		}
-		JobConf conf = new JobConf(ACSDataAnalysis.class); 
-
-		conf.setJobName("acs-sample"); 
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(IntWritable.class); 
-		conf.setMapperClass(E_EMapper.class); 
-		conf.setCombinerClass(E_EReduce.class); 
-		conf.setReducerClass(E_EReduce.class); 
-		conf.setInputFormat(TextInputFormat.class); 
-		conf.setOutputFormat(TextOutputFormat.class); 
-
-		FileInputFormat.setInputPaths(conf, new Path(args[0])); 
-		FileOutputFormat.setOutputPath(conf, new Path(args[1])); 
-
-		JobClient.runJob(conf); 
-	} 
-} */
+		
+		@Override
+		public void feedResource(String[] input, CsvAssociation association) {
+			if (stringQuery.allowed(input)) {
+				
+			}
+		}
+		
+	}
+	
+	public static void main(String[] args) {
+		StringQuery countFirstLess100 = (String[] data) -> Integer.parseInt(data[0]) < 100;
+		CountCsvQueryResponse testQuery = new CountCsvQueryResponse(countFirstLess100) {
+			public Integer singleResponseComputation() {
+				return count;
+			}
+		};
+		
+		String associationFileName = "data/acs-associations.txt";
+		List<String> associationFileData = FileUtils.readShortFile(associationFileName);
+		CsvAssociationParser.parseDataAssociationText(associationFileData);
+		
+		String fileName = new String("data/ss15pca.csv");
+		FileUtils.readLargeCsvFileAsChunks(fileName, testQuery, association);
+	}
+	
+	public interface StringQuery {
+		boolean allowed(String[] data);
+	}
+	
+}

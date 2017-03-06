@@ -1,6 +1,7 @@
 package io.github.dantetam.data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.util.StringUtils;
@@ -14,17 +15,18 @@ public class CsvAssociationParser {
 	//as well as means, std.dev., confidence intervals, etc., for certain answers like income
 	//as well as simple text queries such as "average income in the SF region not counting above $250000"
 
-	private static CsvAssociation parseDataAssociationText(String[] lines) {
+	public static CsvAssociation parseDataAssociationText(List<String> lines) {
 		CsvAssociation result = new CsvAssociation(); 
 		
 		String currentColumn = "", currentColumnFullName = "";
 		boolean lastLineAbbr = false;
-		for (int i = 0; i < lines.length; i++) {
-			if (lines[i].isEmpty()) continue;
-			String[] tokens = lines[i].split(" ");
+		for (int i = 0; i < lines.size(); i++) {
+			String line = lines.get(i);
+			if (line.isEmpty()) continue;
+			String[] tokens = line.split(" ");
 			if (lastLineAbbr) {
 				lastLineAbbr = false;
-				currentColumnFullName = lines[i].trim();
+				currentColumnFullName = line.trim();
 				result.setColumnFullName(currentColumn, currentColumnFullName);
 				continue;
 			}
@@ -37,7 +39,7 @@ public class CsvAssociationParser {
 				}
 			}
 			//The line is a key-value pair association for the current column
-			tokens = lines[i].split(" .");
+			tokens = line.split(" .");
 			String key = tokens[0].trim();
 			String value = tokens[1];
 			result.addDataColumn(currentColumn, key, value);
@@ -51,7 +53,7 @@ public class CsvAssociationParser {
 	//associations is the file parsed in parseDataAssociationText(<associations file>)
 	//One example is this file is the ACS manual found here:
 	//http://www2.census.gov/programs-surveys/acs/tech_docs/pums/data_dict/PUMS_Data_Dictionary_2011-2015.txt
-	public Map<String, String> convertRowToText(String csvRow, String[] columnsList, CsvAssociation associations) {
+	public Map<String, String> convertRowToTextData(String csvRow, String[] columnsList, CsvAssociation associations) {
 		String[] tokens = csvRow.split(",");
 		Map<String, String> result = new HashMap<>();
 		if (tokens.length == columnsList.length) {
@@ -65,9 +67,10 @@ public class CsvAssociationParser {
 		return result;
 	}
 
-	/*function convertTextToRow(commaText, columnsList, associations) {
 
-	}
-	 */
+	/*public String convertTextToRow(commaText, columnsList, associations) {
+
+	}*/
+	
 	
 }

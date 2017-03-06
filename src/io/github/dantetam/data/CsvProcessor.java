@@ -11,39 +11,14 @@ import java.util.List;
 
 import org.ejml.ops.ReadCsv;
 
+/*
+ * A class for reading in a large CSV file in a stream of chunks
+ * where each chunk is processed at a time.
+ */
 public class CsvProcessor {
 
 	public static void readCsv(String fileName) {
-		BufferedReader reader = null;
-		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		String line = null;
-		boolean firstLineRead = false;
-
-		List<String[]> storedData = new ArrayList<>();
-
-		try {
-			while((line = reader.readLine()) != null) {
-				if (!firstLineRead) {
-					firstLineRead = true;
-					continue;
-				}
-				String[] tokens = line.split(",");
-				storedData.add(tokens);
-				if (storedData.size() >= 1000) {
-					System.out.println(storedData.size());
-					storedData.clear();
-				}
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 	}
 
 	public static void main(String[] args) {
