@@ -64,6 +64,7 @@ public class SubjectiveAnalysis {
 	}
 	
 	/*
+	 * TODO:
 	 * A different method of analyzing subjectivity,
 	 * using the parsed grammatical structure of the text,
 	 * combined with weights for certain grammatical modifiers and depth levels.

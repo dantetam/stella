@@ -1,5 +1,7 @@
 /bin/
 /.idea/
+/data/
+/lib/
 *.classpath
 /build/
 *.properties
