@@ -28,6 +28,7 @@ public class ACSDataAnalysis {
 		
 	}
 	
+	//TODO: Uncomment all the code in this method and test it
 	public static void main(String[] args) {
 		StringQuery countFirstLess100 = (String[] data) -> Integer.parseInt(data[0]) < 100;
 		CountCsvQueryResponse testQuery = new CountCsvQueryResponse(countFirstLess100) {
@@ -37,11 +38,11 @@ public class ACSDataAnalysis {
 		};
 		
 		String associationFileName = "data/acs-associations.txt";
-		List<String> associationFileData = FileUtils.readShortFile(associationFileName);
-		CsvAssociationParser.parseDataAssociationText(associationFileData);
+		//List<String> associationFileData = FileUtils.readShortFile(associationFileName);
+		//CsvAssociationParser.parseDataAssociationText(associationFileData);
 		
 		String fileName = new String("data/ss15pca.csv");
-		FileUtils.readLargeCsvFileAsChunks(fileName, testQuery, association);
+		//FileUtils.readLargeCsvFileAsChunks(fileName, testQuery, association);
 	}
 	
 	public interface StringQuery {

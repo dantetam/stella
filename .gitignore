@@ -8,3 +8,7 @@
 *.OBJ
 *.alloc
 *.jar
+*.ogg
+*.wav
+*.afc
+*.pcc
