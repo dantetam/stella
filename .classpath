@@ -42,5 +42,8 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/j3d-1_5_2-windows-amd64/j3dutils.jar"/>
 	<classpathentry kind="lib" path="lib/j3d-1_5_2-windows-amd64/vecmath.jar"/>
+	<classpathentry kind="lib" path="lib/jogg/jogg-0.0.7.jar"/>
+	<classpathentry kind="lib" path="lib/jogg/jorbis-0.0.15.jar"/>
+	<classpathentry kind="lib" path="lib/jogg/tritonus_share.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
