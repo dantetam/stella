@@ -15,6 +15,9 @@ import io.github.dantetam.parser.StellaDependencyParser;
  * This class starts off with a guess with the results of the paper
  * "Twitter as a Corpus for Sentiment Analysis and Opinion Mining",
  * by Pak and Paroubek.
+ * 
+ * TODO: Now that I've actually learned some strenuous classification methods,
+ * like linear classifiers and neural networks, impl.
  */
 public class SubjectiveAnalysis {
 
@@ -47,6 +50,9 @@ public class SubjectiveAnalysis {
 	 * Input is mostly sanitized text tagged by the CoreNLP part of speech tagger,
 	 * where the dot product of its phrases is computed and normalized,
 	 * where -1 is objective and 1 is subjective.
+	 * 
+	 * TODO: Look at the method below and weight words by some sort of precedence level,
+	 * e.g. level in tree, number of associations, etc.
 	 */
 	public double subjectivityScore(String text) {
 		List<TaggedWord> taggedWords = StellaDependencyParser.tagSentence(text);
@@ -56,9 +62,12 @@ public class SubjectiveAnalysis {
 		double score = 0;
 		for (TaggedWord taggedWord: taggedWords) {
 			if (!phraseBiasMap.containsKey(taggedWord.tag())) {
-				System.out.println("Could not find tag: " + taggedWord.tag());
+				System.out.println("Could not find tag: " + taggedWord.tag() + ", " + taggedWord.word());
 			}
-			score += phraseBiasMap.get(taggedWord.tag());
+			else {
+				System.out.println("Found tag: " + taggedWord.tag() + ", " + taggedWord.word());
+				score += phraseBiasMap.get(taggedWord.tag());
+			}
 		}
 		return score / taggedWords.size();
 	}

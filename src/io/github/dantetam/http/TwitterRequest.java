@@ -56,7 +56,7 @@ public class TwitterRequest {
             }
             
             //System.out.println(trends);
-            
+            return results;
         } catch (Exception e) {
         	e.printStackTrace();
         } finally {
@@ -136,29 +136,36 @@ public class TwitterRequest {
 	public static void main(String[] args) {
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
-		String[] tweets = twitterRequest.twitterSearchTopic("DNCChair");
 		
-		StellaTreeAssociation stellaTreeAssociation = new StellaTreeAssociation();
-		
-		//String tweet = tweets[0];
-		//String tweet = "I can always tell when movies use fake dinosaurs";
-		for (String tweet: tweets) {
-			//System.out.println(tweet);
-			tweet = sanitizeTweet(tweet);
-			//System.out.println(tweet);
-			List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
-			for (ParseGrammarResult psg: parseGrammarResults) {
-				StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);
-				double[][] matrix = StellaWordAssociationGraph.getFullAssociationMatrix(psg.taggedWords, graph);
-				Map<String[], Double> sortedCorr = StellaWordAssociationGraph.matrixFindBestCorrelation(psg.taggedWords, matrix);
-				int i = 0;
-				for (Map.Entry<String[], Double> entry : sortedCorr.entrySet()) {
-					String word1 = entry.getKey()[0], word2 = entry.getKey()[1];
-					//if ()
-					if (word1 == "``" || word2 == "``") continue;
-					System.out.println(word1 + ", " + word2 + ": " + entry.getValue());
-					i++;
-					if (i == 30) break;
+		for (int topicIndex = 0; topicIndex < 10; topicIndex++) {
+			if (topicIndex >= topics.length) break;
+			String topic = topics[topicIndex];
+			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_");
+			
+			String[] tweets = twitterRequest.twitterSearchTopic(topic);
+			
+			StellaTreeAssociation stellaTreeAssociation = new StellaTreeAssociation();
+			
+			//String tweet = tweets[0];
+			//String tweet = "I can always tell when movies use fake dinosaurs";
+			for (String tweet: tweets) {
+				//System.out.println(tweet);
+				tweet = sanitizeTweet(tweet);
+				//System.out.println(tweet);
+				List<ParseGrammarResult> parseGrammarResults = StellaDependencyParser.parseGrammarStructure(tweet);
+				for (ParseGrammarResult psg: parseGrammarResults) {
+					StellaWordAssociationGraph graph = stellaTreeAssociation.processText(psg);
+					double[][] matrix = StellaWordAssociationGraph.getFullAssociationMatrix(psg.taggedWords, graph);
+					Map<String[], Double> sortedCorr = StellaWordAssociationGraph.matrixFindBestCorrelation(psg.taggedWords, matrix);
+					int i = 0;
+					for (Map.Entry<String[], Double> entry : sortedCorr.entrySet()) {
+						String word1 = entry.getKey()[0], word2 = entry.getKey()[1];
+						//if ()
+						if (word1 == "``" || word2 == "``") continue;
+						System.out.println(word1 + ", " + word2 + ": " + entry.getValue());
+						i++;
+						if (i == 30) break;
+					}
 				}
 			}
 		}

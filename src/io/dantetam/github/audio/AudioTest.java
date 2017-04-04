@@ -10,27 +10,24 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.DataLine.Info;
+import javax.sound.sampled.LineUnavailableException;
 
+import static javax.sound.sampled.AudioSystem.getAudioInputStream;
+import static javax.sound.sampled.AudioFormat.Encoding.PCM_SIGNED;
 
 public class AudioTest
 {
-	public static void main(String[] args) throws Exception
-	{
-		File randomAudio = randomFileInFolder("data/audio/miranda_sorted/positive");
-		InputStream in = new FileInputStream(randomAudio);
-		BufferedInputStream bin = new BufferedInputStream(in);
-
-		Clip clip = AudioSystem.getClip();
-		AudioInputStream inputStream = AudioSystem.getAudioInputStream(bin);
-		clip.open(inputStream);
-		clip.start(); 
-	}
-
-	public static File randomFileInFolder(String directoryName) {
+	public static File randomAudioFileInFolder(String directoryName) {
 		File[] listOfFiles = getFilesInFolder(directoryName);
 		int index = (int)(Math.random()*listOfFiles.length);
-		return listOfFiles[index];
+		File result = listOfFiles[index];
+		if (result.getName().contains(".txt")) {
+			return randomAudioFileInFolder(directoryName);
+		}
+		return result;
 	}
 
 	public static File[] getFilesInFolder(String directoryName) {
@@ -39,32 +36,59 @@ public class AudioTest
 		return listOfFiles;
 	}
 
-	public static AudioInputStream createOggMp3(File fileIn) throws IOException, Exception {
-		AudioInputStream audioInputStream=null;
-		AudioFormat targetFormat=null;
-		try {
-			AudioInputStream in=null;
-			if(fileIn.getName().endsWith(".ogg")) {
-				VorbisAudioFileReader vb=new VorbisAudioFileReader();
-				in=vb.getAudioInputStream(fileIn);
-			}
-			else if(fileIn.getName().endsWith(".mp3")) {
-				MpegAudioFileReader mp=new MpegAudioFileReader();
-				in=mp.getAudioInputStream(fileIn);
-			}
-			AudioFormat baseFormat=in.getFormat();
-			targetFormat=new AudioFormat(
-					AudioFormat.Encoding.PCM_SIGNED,
-					baseFormat.getSampleRate(),
-					16,
-					baseFormat.getChannels(),
-					baseFormat.getChannels() * 2,
-					baseFormat.getSampleRate(),
-					false);
-			audioInputStream=AudioSystem.getAudioInputStream(targetFormat, in);
-		}
-		catch(UnsupportedAudioFileException ue) { System.out.println("\nUnsupported Audio"); }
-		return audioInputStream;
-	}
+	private static AudioTest player;
+    public static void main(String[] args) {
+    	player = new AudioTest();
+    	File audioFile = randomAudioFileInFolder("data/audio/miranda_sorted/positive");
+        //player.playAudioFile(System.getProperty("user.dir") + "/data/audio/miranda_sorted/positive/" + audioFile.getName()); 
+    	player.playAudioFile(System.getProperty("user.dir") + "/data/audio/miranda_sorted/positive/" + audioFile.getName()); 
+    	player.playAudioFile(System.getProperty("user.dir") + "/data/thanks_stereo.ogg"); 
+        System.out.println("Played file");
+    }
+ 
+    public void playAudioFile(File file) {
+    	try (final AudioInputStream in = getAudioInputStream(file)) {
+            
+            final AudioFormat outFormat = getOutFormat(in.getFormat());
+            final Info info = new Info(SourceDataLine.class, outFormat);
+ 
+            try (final SourceDataLine line =
+                     (SourceDataLine) AudioSystem.getLine(info)) {
+ 
+                if (line != null) {
+                    line.open(outFormat);
+                    line.start(); 
+                    AudioInputStream inputMystream = AudioSystem.getAudioInputStream(outFormat, in);
+                    stream(inputMystream, line);
+                    line.drain();
+                    line.stop();  
+                }
+            }
+            
+        } catch (UnsupportedAudioFileException 
+               | LineUnavailableException 
+               | IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+    
+    public void playAudioFile(String filePath) {
+        final File file = new File(filePath);
+        playAudioFile(file);
+    }
+ 
+    private AudioFormat getOutFormat(AudioFormat inFormat) {
+        final int ch = inFormat.getChannels();
+        final float rate = inFormat.getSampleRate();
+        return new AudioFormat(PCM_SIGNED, rate, 16, ch, ch * 2, rate, false);
+    }
+ 
+    private void stream(AudioInputStream in, SourceDataLine line) 
+        throws IOException {
+        final byte[] buffer = new byte[4096];
+        for (int n = 0; n != -1; n = in.read(buffer, 0, buffer.length)) {
+            line.write(buffer, 0, n);
+        }
+    }
 
 }
