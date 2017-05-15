@@ -16,8 +16,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
+import edu.stanford.nlp.util.StringParsingTask;
 import io.github.dantetam.data.JsonProcessor;
 
 /*
@@ -25,12 +28,7 @@ import io.github.dantetam.data.JsonProcessor;
  */
 public class HttpRequest {
 	
-	public final static void main(String[] args) {
-		String accessToken = twitterRequestBearerToken();
-		System.out.println(accessToken);
-	}
-	
-	public final static void testYahooRequest() throws Exception {
+	public final static void testYahooRequest() throws ClientProtocolException, IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("http://autoc.finance.yahoo.com/autoc?query=Twitter&region=1&lang=en");
@@ -43,6 +41,10 @@ public class HttpRequest {
             httpclient.close();
         }
     }
+	
+	public static JsonElement getJsonElementFromUrl(String url) {
+		return null;
+	}
 	
 	public static String twitterRequestBearerToken() {
 		String encodedToken = new String("YTdLdzNkaXc2WXFKUnNtaEZ2a1dCbGphYTpmZUJoVzB2MGIybmhneHNwcG9lanpWZUNxSWtnbUROTFExaWtXV2RaNXpuVkNJOFc5Rg==");
@@ -74,4 +76,65 @@ public class HttpRequest {
         return null;
 	}
 	
+	
+	public final static JsonElement wikipediaSearch(String subjectString) throws ClientProtocolException, IOException {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	String url = new String("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" + subjectString + "&utf8=&format=json");
+            HttpGet httpget = new HttpGet(url);
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
+
+            return element;
+        } finally {
+            httpclient.close();
+        }
+    }
+	
+	public final static JsonElement wikipediaArticle(String articleName) throws ClientProtocolException, IOException {
+		return wikipediaArticles(new String[]{articleName});
+	}
+	public final static JsonElement wikipediaArticles(String[] articleNames) throws ClientProtocolException, IOException {
+		String allArticleNames = "";
+		for (int i = 0; i < articleNames.length; i++) {
+			allArticleNames += articleNames[i].replace(" ", "_");
+			if (i != articleNames.length - 1) {
+				allArticleNames += "|";
+			}
+		}
+		
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	String url = new String("https://en.wikipedia.org/w/api.php?action=query&titles=" + allArticleNames + "&prop=revisions&rvprop=content&format=json");
+            HttpGet httpget = new HttpGet(url);
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
+
+            return element;
+        } finally {
+            httpclient.close();
+        }
+	}
+	
+	public static final void main(String[] args) {
+		JsonElement root;
+		try {
+			root = wikipediaSearch("Water");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		JsonArray object = root.getAsJsonObject().get("query").getAsJsonObject().get("search").getAsJsonArray();
+		for (JsonElement element: object) {
+			System.out.println(element);
+		}
+		//System.out.println(object.toString());
+		//System.out.println(object.size());
+	}
 }

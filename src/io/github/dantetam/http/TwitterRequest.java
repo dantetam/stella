@@ -1,5 +1,6 @@
 package io.github.dantetam.http;
 
+import java.awt.print.Printable;
 import java.io.IOException;
 import java.sql.Time;
 import java.util.ArrayList;
@@ -137,10 +138,18 @@ public class TwitterRequest {
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
 		
-		for (int topicIndex = 0; topicIndex < 10; topicIndex++) {
+		for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
 			if (topicIndex >= topics.length) break;
 			String topic = topics[topicIndex];
 			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_");
+			
+			System.out.println(topics[topicIndex]);
+		}
+		
+		for (int topicIndex = 0; topicIndex < 10; topicIndex++) {
+			if (topicIndex >= topics.length) break;
+			String topic = topics[topicIndex];
+			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_").replace("?", "");
 			
 			String[] tweets = twitterRequest.twitterSearchTopic(topic);
 			
