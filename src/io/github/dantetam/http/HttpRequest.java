@@ -1,7 +1,9 @@
 package io.github.dantetam.http;
 
+import java.awt.print.Printable;
 import java.io.Console;
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -94,9 +96,27 @@ public class HttpRequest {
     }
 	
 	public final static JsonElement wikipediaArticle(String articleName) throws ClientProtocolException, IOException {
-		return wikipediaArticles(new String[]{articleName});
+		JsonElement articleRoot;
+		try {
+			articleRoot = wikipediaArticleRequest("Water");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+		//System.out.println(articleRoot);
+		
+		JsonObject article = articleRoot.getAsJsonObject().get("query").getAsJsonObject().get("pages").getAsJsonObject();
+		JsonElement firstArticle = article.entrySet().iterator().next().getValue();
+		JsonElement firstArticleText = firstArticle.getAsJsonObject().get("revisions").getAsJsonArray().get(0).getAsJsonObject().get("*");
+		
+		return firstArticleText;
 	}
-	public final static JsonElement wikipediaArticles(String[] articleNames) throws ClientProtocolException, IOException {
+	
+	private final static JsonElement wikipediaArticleRequest(String articleName) throws ClientProtocolException, IOException {
+		return wikipediaArticleRequests(new String[]{articleName});
+	}
+	private final static JsonElement wikipediaArticleRequests(String[] articleNames) throws ClientProtocolException, IOException {
 		String allArticleNames = "";
 		for (int i = 0; i < articleNames.length; i++) {
 			allArticleNames += articleNames[i].replace(" ", "_");
@@ -121,11 +141,10 @@ public class HttpRequest {
 	}
 	
 	public static final void main(String[] args) {
-		JsonElement root;
+		/*JsonElement root;
 		try {
 			root = wikipediaSearch("Water");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return;
 		}
@@ -133,8 +152,32 @@ public class HttpRequest {
 		JsonArray object = root.getAsJsonObject().get("query").getAsJsonObject().get("search").getAsJsonArray();
 		for (JsonElement element: object) {
 			System.out.println(element);
+		}*/
+		
+		String waterText;
+		try {
+			JsonElement waterArticle = wikipediaArticle("Water");
+			waterText = waterArticle.getAsString();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
 		}
-		//System.out.println(object.toString());
-		//System.out.println(object.size());
+		
+		//System.out.println(waterText);
+		
+		//String[] lines = waterText.split("\\n");
+		String[] lines = waterText.replaceAll("\\[", "").replaceAll("\\]", "").split("[\\r\\n]+");
+		for (String line: lines) {
+			System.out.println(line);
+		}
+		
+		String str = "Bye{{Hello}}Hi";
+		//str = str.replaceAll("\\{(.*?)\\}", "$1");
+		str = str.replaceAll("\\{(.*?)\\}", "").replaceAll("\\{", "").replaceAll("\\}", "");
+		System.out.println(str);
+		
 	}
 }
