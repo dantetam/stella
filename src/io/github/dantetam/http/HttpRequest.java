@@ -45,7 +45,23 @@ public class HttpRequest {
     }
 	
 	public static JsonElement getJsonElementFromUrl(String url) {
-		return null;
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	HttpGet httpGet = new HttpGet(url);
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            String responseBody = httpclient.execute(httpGet, responseHandler);
+            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
+            return element;
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+            try {
+				httpclient.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+        }
+        return null;
 	}
 	
 	public static String twitterRequestBearerToken() {
@@ -72,6 +88,52 @@ public class HttpRequest {
 				httpclient.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        return null;
+	}
+	
+	public static String findCompanySymbol(String name) {
+		return findCompanySymbol(new String[]{name})[0];
+	}
+	public static String[] findCompanySymbol(String[] companyNames) {
+		String[] symbols = new String[companyNames.length];
+		for (int i = 0; i < companyNames.length; i++) {
+			String companyName = companyNames[i];
+			
+			String url = new String("https://autoc.finance.yahoo.com/autoc?query=" + companyName + "&region=US&lang=en-US&diagnostics=false");
+			JsonElement element = getJsonElementFromUrl(url);
+			
+			JsonElement foundSymbol = element.getAsJsonObject().get("ResultSet").getAsJsonObject().get("Result").getAsJsonArray().get(0).getAsJsonObject().get("symbol");
+			System.out.println(foundSymbol.toString());
+			symbols[i] = foundSymbol.toString(); 
+		}
+        return symbols;
+	}
+	
+	public static JsonElement intrinioCompanyInfoRequest(String tickerSymbol) {
+		String auth = new String("NGUxNTgzZTQzZWNiMDQ0M2VjODBhOWIzM2NhNmJhMGU6NTA0MzI0NmUwNDliNWFkOWJlZGRiNWVmNDZjMTQwZmY=");
+	
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	String url = new String("https://api.intrinio.com/companies?ticker=" + tickerSymbol);
+        	HttpGet httpGet = new HttpGet(url);
+        	httpGet.addHeader("Authorization", "Basic " + auth);
+        	//httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+        	//httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
+
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            String responseBody = httpclient.execute(httpGet, responseHandler);
+            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
+            
+            return element;
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+            try {
+				httpclient.close();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
         }
@@ -166,18 +228,44 @@ public class HttpRequest {
 			return;
 		}
 		
-		//System.out.println(waterText);
+		System.out.println(waterText);
+		
+		for (int i = 0; i < 10; i++) {
+			System.out.println("-------------------------------------------");
+		}
+		
+		waterText = waterText.replaceAll("\\<(.*?)\\>", "").replaceAll("\\{(.*?)\\}", "").replaceAll("\\{", "").replaceAll("\\}", "");
 		
 		//String[] lines = waterText.split("\\n");
 		String[] lines = waterText.replaceAll("\\[", "").replaceAll("\\]", "").split("[\\r\\n]+");
-		for (String line: lines) {
-			System.out.println(line);
+		for (int i = 0; i < lines.length; i++) {
+			if (lines[i].contains("File:"))
+				continue;
+			
+			//A link in Wikipedia is represented as [[True article name|Display name]], 
+			//here we simply replace that construction with Display name
+			String[] words = lines[i].split(" ");
+			for (String word: words) {
+				if (word.contains("|")) {
+					String[] split = word.split("\\|");
+					if (split.length > 1) {
+						String displayedWord = split[1];
+						lines[i] = lines[i].replace(word, displayedWord);
+					}
+				}
+			}
+			
+			System.out.println(lines[i]);
 		}
 		
-		String str = "Bye{{Hello}}Hi";
+		/*String str = "Bye{{Hello}}Hi";
 		//str = str.replaceAll("\\{(.*?)\\}", "$1");
 		str = str.replaceAll("\\{(.*?)\\}", "").replaceAll("\\{", "").replaceAll("\\}", "");
-		System.out.println(str);
+		System.out.println(str);*/
 		
+		//JsonElement intrinio = intrinioRequest();
+		//System.out.println(intrinio);
+		
+		findCompanySymbol("Google");
 	}
 }
