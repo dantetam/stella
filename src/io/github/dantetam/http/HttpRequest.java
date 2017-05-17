@@ -106,7 +106,6 @@ public class HttpRequest {
 			JsonElement element = getJsonElementFromUrl(url);
 			
 			JsonElement foundSymbol = element.getAsJsonObject().get("ResultSet").getAsJsonObject().get("Result").getAsJsonArray().get(0).getAsJsonObject().get("symbol");
-			System.out.println(foundSymbol.toString());
 			symbols[i] = foundSymbol.toString(); 
 		}
         return symbols;
@@ -145,13 +144,7 @@ public class HttpRequest {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=" + subjectString + "&utf8=&format=json");
-            HttpGet httpget = new HttpGet(url);
-            ResponseHandler<String> responseHandler = new HttpResponseHandler();
-            
-            String responseBody = httpclient.execute(httpget, responseHandler);
-            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
-
-            return element;
+            return getJsonElementFromUrl(url);
         } finally {
             httpclient.close();
         }
@@ -190,13 +183,7 @@ public class HttpRequest {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://en.wikipedia.org/w/api.php?action=query&titles=" + allArticleNames + "&prop=revisions&rvprop=content&format=json");
-            HttpGet httpget = new HttpGet(url);
-            ResponseHandler<String> responseHandler = new HttpResponseHandler();
-            
-            String responseBody = httpclient.execute(httpget, responseHandler);
-            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
-
-            return element;
+        	return getJsonElementFromUrl(url);
         } finally {
             httpclient.close();
         }
@@ -266,6 +253,6 @@ public class HttpRequest {
 		//JsonElement intrinio = intrinioRequest();
 		//System.out.println(intrinio);
 		
-		findCompanySymbol("Google");
+		String[] result = findCompanySymbol(new String[]{"Google", "Apple"});
 	}
 }
