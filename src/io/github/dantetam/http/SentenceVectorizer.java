@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.sun.jna.platform.win32.Variant.VARIANT._VARIANT.__VARIANT;
+
 import edu.stanford.nlp.trees.TypedDependency;
 import io.github.dantetam.parser.ParseGrammarResult;
 import io.github.dantetam.parser.StellaDependencyParser;
@@ -16,15 +18,66 @@ import io.github.dantetam.parser.StellaDependencyParser;
 import java.util.Set;
 
 public class SentenceVectorizer {
-
+	
+	/*public static String[] grammarRelations = {"root", "dep", "aux", "auxpass", 
+			"cop", "arg", "agent", "comp", "acomp", "ccomp", "xcomp", "obj", 
+			"dobj", "iobj", "pobj", "subj", "nsubj", "nsubjpass", "csubj", 
+			"csubjpass", "cc", "conj", "expl", "mod", "amod", "appos", "advcl", "case",
+			"det", "predet", "preconj", "vmod", "mwe", "mark", "advmod", "neg",
+			"rcmod", "quantmod", "nn", "npadvmod", "tmod", "nmod", "nmod:tmod", "nummod", 
+			"prep", "poss", "possessive", "prt", "parataxis", "orphan", 
+			"reparandum", "goeswith", "punct", "ref", "sdep", "xsubj"};*/
+	
+	public static String[] grammarRelations = {
+			"nsubj", "obj", "iobj", "csubj", "ccomp", "xcomp",
+			"obl", "vocative", "expl", "dislocated", "advcl", "advmod", "discourse",
+			"aux", "cop", "mark", "det", "clf", "case",
+			"nmod", "nmod:tmod", "appos", "nummod", "acl", "amod", "det",
+			"conj", "cc",
+			"fixed", "flat", "compound",
+			"list", "parataxis", "orphan", "goeswith", "reparandum", 
+			"punct", "root", "dep"
+	};
+	
+	public static Map<String, Integer> createGrammarRelationMap() {
+		Map<String, Integer> result = new HashMap<>();
+		for (int i = 0; i < grammarRelations.length; i++) {
+			result.put(grammarRelations[i], i);
+		}
+		return result;
+	}
+	
 	public static final void main(String[] args) {
-		List<String> listSentences = new ArrayList<>();
-		listSentences.add("Hello, this is a test this is a test of the outdoor warning system system test test test");
-		listSentences.add("a is");
-		Map<String, Integer> results = uniqueWords(listSentences);
-		findWordIdMap(results, 5);
+		int uniqueWordsLimit = 5;
 		
-		encodeSentenceAsGrammarVec(null, "You walk alone every night in the dark", 0);
+		List<String> listSentences = new ArrayList<>();
+		listSentences.add("You walk alone every night in the dark");
+		listSentences.add("looking for every trace to your heart");
+		Map<String, Integer> uniqueWordMap = uniqueWords(listSentences);
+		Map<String, Integer> wordIdMap = findWordIdMap(uniqueWordMap, uniqueWordsLimit);
+		
+		Map<String, Integer> grammarMap = createGrammarRelationMap();
+		
+		int sentenceLen = lengthLongestSentence(listSentences);
+		
+		int[][] result = new int[listSentences.size()][uniqueWordsLimit + sentenceLen + 1];
+		
+		int[] vector = encodeSentenceAsGrammarVec(grammarMap, "You walk alone every night in the dark", sentenceLen);
+		/*for (int i = 0; i < 8+1; i++) {
+			for (int j = 0; j < 8+1; j++) {
+				int index = i*(8+1) + j;
+				System.out.println(vector[index]);
+			}
+		}*/
+		for (int sentenceIndex = 0; sentenceIndex < listSentences.size(); sentenceIndex++) {
+			String sentence = listSentences.get(sentenceIndex);
+			int[] wordsVec = encodeSentenceAsWordVec(wordIdMap, sentence);
+			int[] grammarVec = encodeSentenceAsGrammarVec(grammarMap, sentence, sentenceLen);
+			int[] totalVec = new int[uniqueWordsLimit + sentenceLen + 1];
+			for (int i = 0; i < wordsVec.length; i++) totalVec[i] = wordsVec[i];
+			for (int i = 0; i < grammarVec.length; i++) totalVec[i + uniqueWordsLimit] = grammarVec[i];
+			result[sentenceIndex] = totalVec;
+		}
 	}
 	
 	public static int lengthLongestSentence(List<String> sentences) {
@@ -74,9 +127,6 @@ public class SentenceVectorizer {
 		
 		String[] words = sentence.split(" ");
 		int[] vector = new int[vecLength];
-		for (int i = 0; i < vecLength; i++) {
-			vector[i] = 0;
-		}
 		
 		//for (String str)
 		for (String word: words) {
@@ -88,11 +138,20 @@ public class SentenceVectorizer {
 	}
 	
 	public static int[] encodeSentenceAsGrammarVec(Map<String, Integer> grammarRelationIds, String sentence, int sizeMaxSentence) {
-		int[] vector = new int[sizeMaxSentence*sizeMaxSentence];
+		int[] vector = new int[(int) Math.pow(sizeMaxSentence + 1, 2)];
 		ParseGrammarResult grammarResult = StellaDependencyParser.parseGrammarStructure(sentence).get(0);
 		Collection<TypedDependency> dependencies = grammarResult.grammarStructure.allTypedDependencies();
 		for (TypedDependency dependency: dependencies) {
-			System.out.println(dependency.gov() + " " + dependency.dep() + " " + dependency.reln());
+			//System.out.println(dependency.gov() + " " + dependency.dep() + " " + dependency.reln());
+			//System.out.println(dependency.gov().index() + " " + dependency.dep().index());
+			if (!grammarRelationIds.containsKey(dependency.reln().toString())) {
+				System.err.println(dependency.reln().toString());
+			}
+			int relationId = grammarRelationIds.get(dependency.reln().toString());
+			int location = (sizeMaxSentence + 1) * (dependency.gov().index()) + (dependency.dep().index());
+			//System.out.println(location);
+			//System.out.println("-------------------------");
+			vector[location] = relationId;
 		}
 		return vector;
 	}
