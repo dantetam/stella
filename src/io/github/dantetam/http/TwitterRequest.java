@@ -4,6 +4,7 @@ import java.awt.print.Printable;
 import java.io.IOException;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,26 @@ public class TwitterRequest {
 	/*
 	 * Get an array of the currently leading topics on Twitter through the GET trends/place endpoint.
 	 */
-	public String[] twitterGlobalTrending() {
+	public Map<String, Integer> getScores(JsonElement[] topics) {
+		Map<String, Integer> result = new HashMap<>();
+		for (int i = 0; i < topics.length; i++) {
+			String name = topics[i].getAsJsonObject().get("name").toString();
+			String tweetVol = topics[i].getAsJsonObject().get("tweet_volume").toString();
+			if (tweetVol == null) {
+				continue;
+			}
+			result.put(name, Integer.parseInt(tweetVol));
+		}
+		return result;
+	}
+	public String[] getTopicsFromJson(JsonElement[] topics) {
+		String[] result = new String[topics.length];
+		for (int i = 0; i < topics.length; i++) {
+			result[i] = topics[i].getAsJsonObject().get("name").toString();
+		}
+		return result;
+	}
+	public JsonElement[] twitterGlobalTrending() {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://api.twitter.com/1.1/trends/place.json?id=1");
@@ -49,11 +69,13 @@ public class TwitterRequest {
             JsonElement element = JsonProcessor.parseStringToObject(responseBody);            
             JsonArray trends = element.getAsJsonArray().get(0).getAsJsonObject().get("trends").getAsJsonArray();
            
-            String[] results = new String[trends.size()];
+            JsonElement[] results = new JsonElement[trends.size()];
             for (int i = 0; i < trends.size(); i++) {
             	JsonElement trend = trends.get(i);
-            	//System.out.println(trend);
-            	results[i] = trend.getAsJsonObject().get("name").toString();
+            	System.out.println(trend);
+            	//results[i] = trend.getAsJsonObject().get("name").toString();
+            	results[i] = trend;
+            	System.out.println("---------");
             }
             
             //System.out.println(trends);
@@ -143,22 +165,36 @@ public class TwitterRequest {
 		return result;
 	}
 	
-	public List<String> collatePopularTopicTweets(int numTopics, int tweetsPerTopic) {
+	public TwitterResult collatePopularTopicTweets(int numTopics, int tweetsPerTopic) {
 		List<String> result = new ArrayList<>();
-		String[] topics = twitterGlobalTrending();
+		JsonElement[] topics = twitterGlobalTrending();
 		
-		for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
+		String[] topicsString = getTopicsFromJson(topics);
+		
+		Map<String, Integer> popularTopics = getScores(topics);
+		
+		/*for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
 			if (topicIndex >= topics.length) break;
-			String topic = topics[topicIndex];
+			String topic = topicsString[topicIndex];
 			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_");
-		}
+		}*/
 		
 		String[][] tweetsOrganized = new String[numTopics][tweetsPerTopic];
+		int[][] tweetsData = new String[]
 		for (int topicIndex = 0; topicIndex < numTopics; topicIndex++) {
 			if (topicIndex >= topics.length) break;
-			String topic = topics[topicIndex];
+			String topic = topicsString[topicIndex];
+			if (!popularTopics.containsKey(topic)) {
+				numTopics++;
+				continue;
+			}
 			topic = topic.replace("\n", "").replace("\"", "").replace("#", "").replace(" ", "_").replace("?", "");
-			String[] tweets = getTweetsFromJson(twitterSearchTopic(topic));
+			
+			int topicScore = Integer.parseInt(topics[topicIndex].getAsJsonObject().get("").toString());
+			
+			JsonElement[] tweetsJson = twitterSearchTopic(topic);
+			
+			String[] tweets = getTweetsFromJson(tweetsJson);
 			int num = Math.min(tweetsPerTopic, tweets.length);
 			for (int i = 0; i < num; i++) {
 				if (tweets[i].contains("???")) {
@@ -168,6 +204,13 @@ public class TwitterRequest {
 				//tweetsOrganized[topicIndex][i] = sanitizeTweet(tweets[i]);
 				//tweetsOrganized[topicIndex][i] = tweets[i];
 				tweetsOrganized[topicIndex][i] = tweets[i].replace("\n", "");
+				JsonElement jsonElement = tweetsJson[i];
+				int[] data = new int[5];
+				data[0] = Integer.parseInt(jsonElement.getAsJsonObject().get("retweet_count").toString());
+				data[1] = Integer.parseInt(jsonElement.getAsJsonObject().get("favorite_count").toString());
+				data[2] = Integer.parseInt(jsonElement.getAsJsonObject().get("user").getAsJsonObject().get("followers_count").toString());
+				data[3] = Integer.parseInt(jsonElement.getAsJsonObject().get("user").getAsJsonObject().get("friends_count").toString());
+				data[4] = topicScore;
 			}
 		}
 		
@@ -180,6 +223,7 @@ public class TwitterRequest {
 			}
 		}
 		
+		
 		return result;
 	}
 	
@@ -189,9 +233,9 @@ public class TwitterRequest {
 		
 		List<String> popularTweets = new TwitterRequest().collatePopularTopicTweets(25,5);
 		//System.out.println("----------------------");
-		for (String tweet: popularTweets) {
+		/*for (String tweet: popularTweets) {
 			System.out.println(tweet);
-		}
+		}*/
 		
 		/*TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
