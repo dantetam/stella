@@ -1,5 +1,8 @@
 package io.github.dantetam.http;
 
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,12 +42,31 @@ public class SentenceVectorizer {
 			"punct", "root", "dep"
 	};
 	
+	public static void main(String[] args) {
+		readInSentencesFromFile("./data/tweets_train.txt");
+	}
+	
 	public static Map<String, Integer> createGrammarRelationMap() {
 		Map<String, Integer> result = new HashMap<>();
 		for (int i = 0; i < grammarRelations.length; i++) {
 			result.put(grammarRelations[i], i);
 		}
 		return result;
+	}
+	
+	public static List<String> readInSentencesFromFile(String fileName) {
+		List<String> results = new ArrayList<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+			String sCurrentLine;
+
+			while ((sCurrentLine = br.readLine()) != null) {
+				System.out.println(sCurrentLine.replace("\"", ""));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return results;
 	}
 	
 	public static int[][] vectorizeSentences(List<String> listSentences) {
@@ -101,10 +123,11 @@ public class SentenceVectorizer {
 		for (String sentence: sentences) {
 			String[] words = sentence.split(" ");
 			for (String word: words) {
-				if (!result.containsKey(word)) {
-					result.put(word, 0);
+				String lowercaseWord = word.trim().toLowerCase();
+				if (!result.containsKey(lowercaseWord)) {
+					result.put(lowercaseWord, 0);
 				}
-				result.put(word, result.get(word) + 1);
+				result.put(lowercaseWord, result.get(lowercaseWord) + 1);
 			}
 		}
 		return result;

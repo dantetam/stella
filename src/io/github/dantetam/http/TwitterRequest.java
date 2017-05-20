@@ -74,14 +74,22 @@ public class TwitterRequest {
 	/*
 	 * Get tweets from Twitter for a certain topic through the Twitter API GET search/tweets endpoint.
 	 */
-	public String[] twitterSearchTopic(String topic) {
+	public String[] getTweetsFromJson(JsonElement[] tweets) {
+		String[] result = new String[tweets.length];
+		for (int i = 0; i < tweets.length; i++) {
+			result[i] = tweets[i].getAsJsonObject().get("text").toString();
+		}
+		return result;
+	}
+	public JsonElement[] twitterSearchTopic(String topic) {
 		CloseableHttpClient httpclient = HttpClients.createDefault();
         try {
         	String url = new String("https://api.twitter.com/1.1/search/tweets.json?");
         	url += "q=" + topic;
         	url += "&lang=en";
         	url += "&count=100";
-        	System.out.println(url);
+        	url += "&result_type=popular";
+        	//System.out.println(url);
         	HttpGet httpGet = new HttpGet(url);
         	httpGet.setHeader("Authorization", "Bearer " + accessToken);
         	
@@ -89,16 +97,17 @@ public class TwitterRequest {
             String responseBody = httpclient.execute(httpGet, responseHandler);
 
             JsonArray tweets = JsonProcessor.parseStringToObject(responseBody).getAsJsonObject().get("statuses").getAsJsonArray();   
-            String[] results = new String[tweets.size()];
+            JsonElement[] results = new JsonElement[tweets.size()];
             for (int i = 0; i < tweets.size(); i++) {
             	JsonElement tweet = tweets.get(i);
-            	System.out.println("-------");
+            	/*System.out.println("-------");
             	System.out.println(tweet);
             	System.out.println(tweet.getAsJsonObject().get("created_at").toString());
             	System.out.println(tweet.getAsJsonObject().get("id").toString());
             	System.out.println(tweet.getAsJsonObject().get("text").toString());
-            	System.out.println(tweet.getAsJsonObject().get("user").toString());
-            	results[i] = tweet.getAsJsonObject().get("text").toString();
+            	System.out.println(tweet.getAsJsonObject().get("user").toString());*/
+            	//System.out.println(tweet);
+            	results[i] = tweet;
             }
             
             return results;
@@ -124,10 +133,10 @@ public class TwitterRequest {
 		String result = "";
 		for (int i = 0; i < tokens.length - 1; i++) { //Remove last token which is often truncated
 			String token = tokens[i];
-			if (token.contains("#")) {
+			if (token.contains("#") || token.contains("@")) {
 				token = token.substring(1);
 			}
-			if (!token.equals("RT") && !token.contains("@") && !token.contains("&") && !token.contains("...") && token.trim().length() > 0) {
+			else if (!token.equals("RT") && !token.contains("&") && !token.contains("...") && !token.contains("\\") && token.trim().length() > 0) {
 				result += token.replaceAll("[^A-Za-z0-9 ]", "") + " ";
 			}
 		}
@@ -148,11 +157,17 @@ public class TwitterRequest {
 		for (int topicIndex = 0; topicIndex < numTopics; topicIndex++) {
 			if (topicIndex >= topics.length) break;
 			String topic = topics[topicIndex];
-			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_").replace("?", "");
-			String[] tweets = twitterSearchTopic(topic);
+			topic = topic.replace("\n", "").replace("\"", "").replace("#", "").replace(" ", "_").replace("?", "");
+			String[] tweets = getTweetsFromJson(twitterSearchTopic(topic));
 			int num = Math.min(tweetsPerTopic, tweets.length);
 			for (int i = 0; i < num; i++) {
-				tweetsOrganized[topicIndex][i] = tweets[i];
+				if (tweets[i].contains("???")) {
+					continue;
+				}
+				//System.out.println(tweets[i]);
+				//tweetsOrganized[topicIndex][i] = sanitizeTweet(tweets[i]);
+				//tweetsOrganized[topicIndex][i] = tweets[i];
+				tweetsOrganized[topicIndex][i] = tweets[i].replace("\n", "");
 			}
 		}
 		
@@ -169,14 +184,16 @@ public class TwitterRequest {
 	}
 	
 	public static void main(String[] args) {
-		List<String> popularTweets = new TwitterRequest().collatePopularTopicTweets(5,5);
+		//System.out.println("#???????_??????_????? #?????????_??????????".contains("???"));
+		//System.out.println("--------------");
+		
+		List<String> popularTweets = new TwitterRequest().collatePopularTopicTweets(25,5);
+		//System.out.println("----------------------");
 		for (String tweet: popularTweets) {
 			System.out.println(tweet);
 		}
 		
-		if (5 > 3) return;
-		
-		TwitterRequest twitterRequest = new TwitterRequest();
+		/*TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
 		
 		for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
@@ -218,7 +235,7 @@ public class TwitterRequest {
 					}
 				}
 			}
-		}
+		}*/
 	}
 	
 }
