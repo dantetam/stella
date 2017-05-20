@@ -134,7 +134,48 @@ public class TwitterRequest {
 		return result;
 	}
 	
+	public List<String> collatePopularTopicTweets(int numTopics, int tweetsPerTopic) {
+		List<String> result = new ArrayList<>();
+		String[] topics = twitterGlobalTrending();
+		
+		for (int topicIndex = 0; topicIndex < topics.length; topicIndex++) {
+			if (topicIndex >= topics.length) break;
+			String topic = topics[topicIndex];
+			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_");
+		}
+		
+		String[][] tweetsOrganized = new String[numTopics][tweetsPerTopic];
+		for (int topicIndex = 0; topicIndex < numTopics; topicIndex++) {
+			if (topicIndex >= topics.length) break;
+			String topic = topics[topicIndex];
+			topic = topic.replace("\"", "").replace("#", "").replace(" ", "_").replace("?", "");
+			String[] tweets = twitterSearchTopic(topic);
+			int num = Math.min(tweetsPerTopic, tweets.length);
+			for (int i = 0; i < num; i++) {
+				tweetsOrganized[topicIndex][i] = tweets[i];
+			}
+		}
+		
+		for (int i = 0; i < tweetsOrganized.length; i++) {
+			for (int j = 0; j < tweetsOrganized[0].length; j++) {
+				String tweet = tweetsOrganized[i][j];
+				if (tweet != null) {
+					result.add(tweet);
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 	public static void main(String[] args) {
+		List<String> popularTweets = new TwitterRequest().collatePopularTopicTweets(5,5);
+		for (String tweet: popularTweets) {
+			System.out.println(tweet);
+		}
+		
+		if (5 > 3) return;
+		
 		TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();
 		

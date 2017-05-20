@@ -32,7 +32,7 @@ public class SentenceVectorizer {
 			"nsubj", "obj", "iobj", "csubj", "ccomp", "xcomp",
 			"obl", "vocative", "expl", "dislocated", "advcl", "advmod", "discourse",
 			"aux", "cop", "mark", "det", "clf", "case",
-			"nmod", "nmod:tmod", "appos", "nummod", "acl", "amod", "det",
+			"nmod", "nmod:tmod", "nmod:poss", "appos", "nummod", "acl", "amod", "det",
 			"conj", "cc",
 			"fixed", "flat", "compound",
 			"list", "parataxis", "orphan", "goeswith", "reparandum", 
@@ -47,12 +47,12 @@ public class SentenceVectorizer {
 		return result;
 	}
 	
-	public static final void main(String[] args) {
-		int uniqueWordsLimit = 5;
+	public static int[][] vectorizeSentences(List<String> listSentences) {
+		int uniqueWordsLimit = 250;
 		
-		List<String> listSentences = new ArrayList<>();
+		/*List<String> listSentences = new ArrayList<>();
 		listSentences.add("You walk alone every night in the dark");
-		listSentences.add("looking for every trace to your heart");
+		listSentences.add("looking for every trace to your heart");*/
 		Map<String, Integer> uniqueWordMap = uniqueWords(listSentences);
 		Map<String, Integer> wordIdMap = findWordIdMap(uniqueWordMap, uniqueWordsLimit);
 		
@@ -60,9 +60,9 @@ public class SentenceVectorizer {
 		
 		int sentenceLen = lengthLongestSentence(listSentences);
 		
-		int[][] result = new int[listSentences.size()][uniqueWordsLimit + sentenceLen + 1];
+		int[][] result = new int[listSentences.size()][uniqueWordsLimit + (sentenceLen + 1)*(sentenceLen + 1)];
 		
-		int[] vector = encodeSentenceAsGrammarVec(grammarMap, "You walk alone every night in the dark", sentenceLen);
+		//int[] vector = encodeSentenceAsGrammarVec(grammarMap, "You walk alone every night in the dark", sentenceLen);
 		/*for (int i = 0; i < 8+1; i++) {
 			for (int j = 0; j < 8+1; j++) {
 				int index = i*(8+1) + j;
@@ -73,11 +73,16 @@ public class SentenceVectorizer {
 			String sentence = listSentences.get(sentenceIndex);
 			int[] wordsVec = encodeSentenceAsWordVec(wordIdMap, sentence);
 			int[] grammarVec = encodeSentenceAsGrammarVec(grammarMap, sentence, sentenceLen);
-			int[] totalVec = new int[uniqueWordsLimit + sentenceLen + 1];
+			int[] totalVec = new int[wordsVec.length + grammarVec.length];
 			for (int i = 0; i < wordsVec.length; i++) totalVec[i] = wordsVec[i];
 			for (int i = 0; i < grammarVec.length; i++) totalVec[i + uniqueWordsLimit] = grammarVec[i];
 			result[sentenceIndex] = totalVec;
+			/*for (int num: totalVec)
+				System.out.print(num + " ");
+			System.out.println();*/
 		}
+		
+		return result;
 	}
 	
 	public static int lengthLongestSentence(List<String> sentences) {
