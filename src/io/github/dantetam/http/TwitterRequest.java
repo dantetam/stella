@@ -1,8 +1,6 @@
 package io.github.dantetam.http;
 
-import java.awt.print.Printable;
 import java.io.IOException;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +15,6 @@ import org.apache.http.impl.client.HttpClients;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.sun.jna.platform.win32.OaIdl.VARDESC;
 
 import edu.stanford.nlp.util.StringParsingTask;
 import io.github.dantetam.data.JsonProcessor;
@@ -71,7 +68,7 @@ public class TwitterRequest {
            
             JsonElement[] results = new JsonElement[trends.size()];
             for (int i = 0; i < trends.size(); i++) {
-            	System.out.println(trends.get(i).toString());
+            	//System.out.println(trends.get(i).toString());
             	results[i] = trends.get(i);
             }
             
@@ -119,7 +116,7 @@ public class TwitterRequest {
             JsonElement[] results = new JsonElement[tweets.size()];
             for (int i = 0; i < tweets.size(); i++) {
             	results[i] = tweets.get(i);
-            	System.out.println(tweets.get(i));
+            	//System.out.println(tweets.get(i));
             }
             
             return results;
@@ -148,7 +145,7 @@ public class TwitterRequest {
 			if (token.contains("#") || token.contains("@")) {
 				token = token.substring(1);
 			}
-			else if (!token.equals("RT") && !token.contains("&") && !token.contains("...") && !token.contains("\\") && token.trim().length() > 0) {
+			if (!token.equals("RT") && !token.contains("&") && !token.contains("...") && !token.contains("\\") && token.trim().length() > 0) {
 				result += token.replaceAll("[^A-Za-z0-9 ]", "") + " ";
 			}
 		}
@@ -199,6 +196,10 @@ public class TwitterRequest {
 			System.out.println(tweet.hasAnimatedGif());
 			System.out.println("----------------------");
 		}*/
+		
+		for (Tweet tweet: popularTweets) {
+			System.out.println(tweet.toString());
+		}
 		
 		/*TwitterRequest twitterRequest = new TwitterRequest();
 		String[] topics = twitterRequest.twitterGlobalTrending();

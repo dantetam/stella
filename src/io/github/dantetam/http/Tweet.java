@@ -6,10 +6,10 @@ import com.google.gson.JsonElement;
 public class Tweet {
 
 	public String topic;
-	public int topicScore;
+	public float topicScore;
 	private JsonElement jsonElement;
 	
-	public Tweet(String topic, int topicScore, JsonElement init) {
+	public Tweet(String topic, float topicScore, JsonElement init) {
 		this.topic = topic;
 		this.topicScore = topicScore;
 		jsonElement = init;
@@ -40,7 +40,6 @@ public class Tweet {
 		if (possibleMedia == null) return false;
 		JsonArray allMedia = possibleMedia.getAsJsonArray();
 		for (JsonElement media: allMedia) {
-			System.out.println(media.getAsJsonObject().get("type").toString());
 			if (media.getAsJsonObject().get("type").toString().contains("photo")) {
 				return true;
 			}
@@ -97,10 +96,64 @@ public class Tweet {
 		return false;
 	}
 	
+	public int[] getTimeVector() {
+		String dateString = jsonElement.getAsJsonObject().get("created_at").toString();
+		float time = Float.parseFloat(dateString.split(" ")[3].split(":")[0]);
+		time += Float.parseFloat(dateString.split(" ")[3].split(":")[1]) / 60.0f;
+		int start = 2, inc = 4;
+		int slots = 6;
+		int[] vector = new int[slots];
+		for (int i = 0; i < slots; i++) {
+			if ( 	(time > start && time <= (start + inc)) ||
+					(time + 24 > start && time + 24 <= (start + inc))
+					)
+			{
+				vector[i] = 1;
+				break;
+			}
+			start += inc;
+		}
+		return vector;
+	}
+	
+	public int[] getDayOfWeekVector() {
+		String dateString = jsonElement.getAsJsonObject().get("created_at").toString();
+		String dayString = dateString.split(" ")[0].replace("\"", "");
+		String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+		int[] vector = new int[7];
+		for (int i = 0; i < 7; i++) {
+			if (dayString.equals(days[i])) {
+				vector[i] = 1;
+				break;
+			}
+		}
+		return vector;
+	}
+	
+	public String vectorToString(int[] vec) {
+		if (vec.length == 0) return "";
+		String result = "";
+		for (int i = 0; i < vec.length; i++) {
+			result += vec[i] + ",";
+		}
+		return result.substring(0, result.length() - 1); 
+	}
+	
 	public float popularityScore() {
 		float top = 2.0f * retweets() + (float) favorites();
 		float bottom = userFollowers() * 0.01f + (float) userFriends();
-		return top / (bottom * topicScore);
+		return top * 1000.0f / (bottom * topicScore);
+	}
+	
+	public String toString() {
+		return text() + "," + sanitizedText() + "," + popularityScore() + "," + 
+				9999 + "," +
+				9999 + "," +
+				vectorToString(getTimeVector()) + "," +
+				vectorToString(getDayOfWeekVector()) + "," + 
+				(hasPhoto() ? 1 : 0) + "," +
+				(hasVideo() ? 1 : 0) + "," +
+				(hasAnimatedGif() ? 1 : 0); 
 	}
 	
 }
