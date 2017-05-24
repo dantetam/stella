@@ -3,8 +3,10 @@ package io.github.dantetam.http;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -12,6 +14,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.lwjgl.Sys;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -183,11 +186,21 @@ public class TwitterRequest {
 		return result;
 	}
 	
+	public static Set<String> collectAllTopics(List<Tweet> tweets) {
+		Set<String> results = new HashSet<>();
+		for (Tweet tweet: tweets) {
+			if (!results.contains(tweet.topic)) {
+				results.add(tweet.topic);
+			}
+		}
+		return results;
+	}
+	
 	public static void main(String[] args) {
 		//System.out.println("#???????_??????_????? #?????????_??????????".contains("???"));
 		//System.out.println("--------------");
 		
-		List<Tweet> popularTweets = new TwitterRequest().collatePopularTopicTweets(25,15);
+		List<Tweet> popularTweets = new TwitterRequest().collatePopularTopicTweets(50,1000);
 		//System.out.println("----------------------");
 		/*for (Tweet tweet: popularTweets) {
 			System.out.println(tweet.text());
@@ -199,6 +212,14 @@ public class TwitterRequest {
 		
 		for (Tweet tweet: popularTweets) {
 			System.out.println(tweet.toString());
+		}
+		
+		System.out.println("------------------------------");
+		
+		Set<String> allTopicNames = collectAllTopics(popularTweets);
+		
+		for (String topicName: allTopicNames) {
+			System.out.println(topicName);
 		}
 		
 		/*TwitterRequest twitterRequest = new TwitterRequest();

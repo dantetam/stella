@@ -3,6 +3,8 @@ package io.github.dantetam.http;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
+import io.github.dantetam.analysis.SentimentAnalysis;
+
 public class Tweet {
 
 	public String topic;
@@ -26,6 +28,12 @@ public class Tweet {
 	}
 	public int userFriends() {
 		return Integer.parseInt(jsonElement.getAsJsonObject().get("user").getAsJsonObject().get("friends_count").toString());
+	}
+	public int userNumStatuses() {
+		return Integer.parseInt(jsonElement.getAsJsonObject().get("user").getAsJsonObject().get("statuses_count").toString());
+	}
+	public int userOtherFavorites() {
+		return Integer.parseInt(jsonElement.getAsJsonObject().get("user").getAsJsonObject().get("favourites_count").toString());
 	}
 	
 	public String text() {
@@ -96,12 +104,16 @@ public class Tweet {
 		return false;
 	}
 	
+	public float getSentiment() {
+		return SentimentAnalysis.getSentimentSentence(sanitizedText());
+	}
+	
 	public int[] getTimeVector() {
 		String dateString = jsonElement.getAsJsonObject().get("created_at").toString();
 		float time = Float.parseFloat(dateString.split(" ")[3].split(":")[0]);
 		time += Float.parseFloat(dateString.split(" ")[3].split(":")[1]) / 60.0f;
-		int start = 2, inc = 4;
-		int slots = 6;
+		int start = 2, inc = 2;
+		int slots = 12;
 		int[] vector = new int[slots];
 		for (int i = 0; i < slots; i++) {
 			if ( 	(time > start && time <= (start + inc)) ||
@@ -142,18 +154,50 @@ public class Tweet {
 	public float popularityScore() {
 		float top = 2.0f * retweets() + (float) favorites();
 		float bottom = userFollowers() * 0.01f + (float) userFriends();
-		return top * 1000.0f / (bottom * topicScore);
+		return top * 100000.0f / (bottom * topicScore);
 	}
 	
-	public String toString() {
-		return text() + "," + sanitizedText() + "," + popularityScore() + "," + 
-				9999 + "," +
+	public static String oldCsvCategoryString = "CATEGORY,EMOTION,"
+			+ "TIME2_6,TIME6_10,TIME10_14,TIME14_18,TIME18_22,TIME22_2,"
+			+ "DATE_SUN,DATE_MON,DATE_TUE,DATE_WED,DATE_THU,DATE_FRI,DATE_SAT,"
+			+ "PHOTO,VIDEO,ANIMATED_GIF,"
+			+ "LOG10_USER_FAV,LOG10_USER_STATUS_COUNT,"
+			+ "TOPIC,TEXT,SANITIZED_TEXT,"
+			+ "SCORE";
+	public String oldString() {
+		return 9999 + "," +
 				9999 + "," +
 				vectorToString(getTimeVector()) + "," +
 				vectorToString(getDayOfWeekVector()) + "," + 
 				(hasPhoto() ? 1 : 0) + "," +
 				(hasVideo() ? 1 : 0) + "," +
-				(hasAnimatedGif() ? 1 : 0); 
+				(hasAnimatedGif() ? 1 : 0) + "," + 
+				(float) Math.max(0, Math.log10(userOtherFavorites())) + "," +
+				(float) Math.max(0, Math.log10(userNumStatuses())) + "," +
+				topic + "," +
+				text() + "," + sanitizedText() + "," + popularityScore();
+	}
+	
+	public static String csvCategoryString = "CATEGORY,SENTIMENT,"
+			+ "TIME2_4,TIME4_6,TIME6_8,TIME8_10,TIME10_12,TIME12_14,TIME14_16,TIME16_18,TIME18_20,TIME20_22,TIME22_24,TIME24_2"
+			+ "DATE_SUN,DATE_MON,DATE_TUE,DATE_WED,DATE_THU,DATE_FRI,DATE_SAT,"
+			+ "PHOTO,VIDEO,ANIMATED_GIF,"
+			+ "USER_FAV,USER_STATUS_COUNT,"
+			+ "FAVORITES,RETWEETS,TOPIC_SCORE"
+			+ "TOPIC,TEXT,SANITIZED_TEXT,"
+			+ "SCORE";
+	public String toString() {
+		return 9999 + "," +
+				getSentiment() + "," +
+				vectorToString(getTimeVector()) + "," +
+				vectorToString(getDayOfWeekVector()) + "," + 
+				(hasPhoto() ? 1 : 0) + "," +
+				(hasVideo() ? 1 : 0) + "," +
+				(hasAnimatedGif() ? 1 : 0) + "," + 
+				userOtherFavorites() + "," + userNumStatuses() + "," +
+				favorites() + "," + retweets() + "," + topicScore + "," +
+				topic + "," +
+				text() + "," + sanitizedText() + "," + popularityScore();
 	}
 	
 }
