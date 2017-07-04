@@ -94,6 +94,36 @@ public class HttpRequest {
         return null;
 	}
 	
+	public static String spotifyRequestBearerToken() {
+		String encodedToken = new String("NmY0NTExZjk1YTU0NGFjN2EwMWEwZDc1M2U1MTc5MTQ6Nzg5MTE5ODU0MTUzNDhiMWI1OGFhMDg3ZGIzNjQ3ZWU=");
+		
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+        	String url = new String("https://accounts.spotify.com/api/token");
+        	HttpPost httpPost = new HttpPost(url);
+        	httpPost.addHeader("Authorization", "Basic " + encodedToken);
+        	httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+        	httpPost.setEntity(new StringEntity("grant_type=client_credentials"));
+
+            ResponseHandler<String> responseHandler = new HttpResponseHandler();
+            String responseBody = httpclient.execute(httpPost, responseHandler);
+            JsonElement element = JsonProcessor.parseStringToObject(responseBody);
+            
+            String accessToken = element.getAsJsonObject().get("access_token").toString();
+            return accessToken;
+        } catch (Exception e) {
+        	e.printStackTrace();
+        } finally {
+            try {
+				httpclient.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        return null;
+	}
+	
 	public static String findCompanySymbol(String name) {
 		return findCompanySymbol(new String[]{name})[0];
 	}
@@ -106,7 +136,7 @@ public class HttpRequest {
 			JsonElement element = getJsonElementFromUrl(url);
 			
 			JsonElement foundSymbol = element.getAsJsonObject().get("ResultSet").getAsJsonObject().get("Result").getAsJsonArray().get(0).getAsJsonObject().get("symbol");
-			symbols[i] = foundSymbol.toString(); 
+			symbols[i] = foundSymbol.toString().replaceAll("\"", ""); 
 		}
         return symbols;
 	}
@@ -190,6 +220,9 @@ public class HttpRequest {
 	}
 	
 	public static final void main(String[] args) {
+		
+		System.out.println(spotifyRequestBearerToken());
+		
 		/*JsonElement root;
 		try {
 			root = wikipediaSearch("Water");
@@ -254,5 +287,10 @@ public class HttpRequest {
 		//System.out.println(intrinio);
 		
 		String[] result = findCompanySymbol(new String[]{"Google", "Apple"});
+		for (int i = 0; i < result.length; i++) {
+			String symbol = result[i];
+			JsonElement element = intrinioCompanyInfoRequest(symbol);
+			System.out.println(element.toString());
+		}
 	}
 }
